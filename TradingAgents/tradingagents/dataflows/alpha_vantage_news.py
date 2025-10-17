@@ -19,7 +19,7 @@ def get_news(ticker, start_date, end_date) -> dict[str, str] | str:
         "time_from": format_datetime_for_api(start_date),
         "time_to": format_datetime_for_api(end_date),
         "sort": "LATEST",
-        "limit": "50",
+        "limit": "10",  # Reduced from 50 to 10
     }
     
     return _make_api_request("NEWS_SENTIMENT", params)

@@ -19,16 +19,23 @@ def create_research_manager(llm, memory):
         for i, rec in enumerate(past_memories, 1):
             past_memory_str += rec["recommendation"] + "\n\n"
 
-        prompt = f"""As the portfolio manager and debate facilitator, your role is to critically evaluate this round of debate and make a definitive decision: align with the bear analyst, the bull analyst, or choose Hold only if it is strongly justified based on the arguments presented.
+        prompt = f"""As the portfolio manager and debate facilitator, your role is to critically evaluate this round of debate and make a definitive decision with confidence metrics and trading parameters.
 
-Summarize the key points from both sides concisely, focusing on the most compelling evidence or reasoning. Your recommendation—Buy, Sell, or Hold—must be clear and actionable. Avoid defaulting to Hold simply because both sides have valid points; commit to a stance grounded in the debate's strongest arguments.
+Your decision must include:
+1. **Recommendation**: BUY/HOLD/SELL with confidence percentage (0-100%)
+2. **Optimal Entry Price**: Specific price target for entry (if BUY)
+3. **Take Profit %**: Target profit percentage (0-100%)
+4. **Stop Loss %**: Risk management percentage (0-100%)
+5. **Confidence Breakdown**: Confidence in price target, timing, and overall thesis
 
-Additionally, develop a detailed investment plan for the trader. This should include:
+Format your final recommendation as:
+FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** (Confidence: X%)
+- Entry Price: $X.XX
+- Take Profit: +X%
+- Stop Loss: -X%
+- Confidence: Price Target (X%), Timing (X%), Thesis (X%)
 
-Your Recommendation: A decisive stance supported by the most convincing arguments.
-Rationale: An explanation of why these arguments lead to your conclusion.
-Strategic Actions: Concrete steps for implementing the recommendation.
-Take into account your past mistakes on similar situations. Use these insights to refine your decision-making and ensure you are learning and improving. Present your analysis conversationally, as if speaking naturally, without special formatting. 
+Summarize key arguments from both sides, provide rationale, and develop strategic actions. Learn from past mistakes: 
 
 Here are your past reflections on mistakes:
 \"{past_memory_str}\"

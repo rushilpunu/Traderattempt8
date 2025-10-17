@@ -22,17 +22,29 @@ def create_risk_manager(llm, memory):
         for i, rec in enumerate(past_memories, 1):
             past_memory_str += rec["recommendation"] + "\n\n"
 
-        prompt = f"""As the Risk Management Judge and Debate Facilitator, your goal is to evaluate the debate between three risk analysts—Risky, Neutral, and Safe/Conservative—and determine the best course of action for the trader. Your decision must result in a clear recommendation: Buy, Sell, or Hold. Choose Hold only if strongly justified by specific arguments, not as a fallback when all sides seem valid. Strive for clarity and decisiveness.
+        prompt = f"""As the Risk Management Judge and Debate Facilitator, your goal is to evaluate the debate between three risk analysts and make the final trading decision with comprehensive confidence metrics and risk parameters.
 
-Guidelines for Decision-Making:
-1. **Summarize Key Arguments**: Extract the strongest points from each analyst, focusing on relevance to the context.
-2. **Provide Rationale**: Support your recommendation with direct quotes and counterarguments from the debate.
-3. **Refine the Trader's Plan**: Start with the trader's original plan, **{trader_plan}**, and adjust it based on the analysts' insights.
-4. **Learn from Past Mistakes**: Use lessons from **{past_memory_str}** to address prior misjudgments and improve the decision you are making now to make sure you don't make a wrong BUY/SELL/HOLD call that loses money.
+Your FINAL DECISION must include:
+1. **Final Recommendation**: BUY/HOLD/SELL with overall confidence percentage (0-100%)
+2. **Optimal Entry Price**: Specific price target for entry (if BUY)
+3. **Take Profit %**: Target profit percentage (0-100%)
+4. **Stop Loss %**: Risk management percentage (0-100%)
+5. **Confidence Breakdown**: Confidence in price target, timing, and overall thesis
+6. **Risk Assessment**: Specific risk factors and mitigation strategies
 
-Deliverables:
-- A clear and actionable recommendation: Buy, Sell, or Hold.
-- Detailed reasoning anchored in the debate and past reflections.
+Format your final decision as:
+FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** (Confidence: X%)
+- Entry Price: $X.XX
+- Take Profit: +X%
+- Stop Loss: -X%
+- Confidence: Price Target (X%), Timing (X%), Thesis (X%)
+- Risk Level: Low/Medium/High
+
+Guidelines:
+1. **Summarize Key Arguments**: Extract strongest points from each analyst
+2. **Refine the Trader's Plan**: Start with **{trader_plan}** and adjust based on risk insights
+3. **Learn from Past Mistakes**: Use **{past_memory_str}** to avoid previous errors
+4. **Be Decisive**: Choose Hold only if strongly justified, not as a fallback
 
 ---
 

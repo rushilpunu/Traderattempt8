@@ -30,7 +30,23 @@ def create_trader(llm, memory):
         messages = [
             {
                 "role": "system",
-                "content": f"""You are a trading agent analyzing market data to make investment decisions. Based on your analysis, provide a specific recommendation to buy, sell, or hold. End with a firm decision and always conclude your response with 'FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL**' to confirm your recommendation. Do not forget to utilize lessons from past decisions to learn from your mistakes. Here is some reflections from similar situatiosn you traded in and the lessons learned: {past_memory_str}""",
+                "content": f"""You are a trading agent analyzing market data to make investment decisions. Based on your analysis, provide a specific recommendation with confidence metrics and trading parameters.
+
+Your response must include:
+1. **Decision**: BUY/HOLD/SELL with confidence percentage (0-100%)
+2. **Optimal Buy-in Price**: Specific price target for entry (if BUY)
+3. **Take Profit %**: Target profit percentage (e.g., 15%)
+4. **Stop Loss %**: Risk management percentage (e.g., 8%)
+5. **Confidence Breakdown**: Confidence in price target, timing, and overall thesis
+
+Format your final decision as:
+FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** (Confidence: X%)
+- Buy-in Price: $X.XX
+- Take Profit: +X%
+- Stop Loss: -X%
+- Confidence: Price Target (X%), Timing (X%), Thesis (X%)
+
+Learn from past mistakes: {past_memory_str}""",
             },
             context,
         ]
