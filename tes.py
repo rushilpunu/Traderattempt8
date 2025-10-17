@@ -1,5 +1,7 @@
-import sys
-import os
+from dotenv import load_dotenv
+import sys  # noqa: E402
+import os  # noqa: E402
+load_dotenv()
 sys.path.append(os.path.join(os.path.dirname(__file__), 'TradingAgents'))
 
 from tradingagents.graph.trading_graph import TradingAgentsGraph
@@ -22,9 +24,6 @@ config["data_vendors"] = {
 # Initialize with custom config
 ta = TradingAgentsGraph(debug=True, config=config)
 
-
-
-
 # forward propagate
-_, decision = ta.propagate("NVDA", "2024-05-10")
+_, decision = ta.propagate("AAPL", "2025-10-16")
 print(decision)
