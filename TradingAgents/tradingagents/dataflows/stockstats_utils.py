@@ -79,4 +79,9 @@ class StockstatsUtils:
             indicator_value = matching_rows[indicator].values[0]
             return indicator_value
         else:
-            return "N/A: Not a trading day (weekend or holiday)"
+            # Fallback to the most recent prior trading day
+            prior_rows = df[df["Date"] <= curr_date]
+            if not prior_rows.empty:
+                indicator_value = prior_rows.iloc[-1][indicator]
+                return indicator_value
+            return "N/A"

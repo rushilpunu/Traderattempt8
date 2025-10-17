@@ -171,11 +171,17 @@ class TradingAgentsGraph:
         if self.debug:
             # Debug mode with tracing
             trace = []
+            seen_messages = set()  # Track seen messages to avoid duplicates
             for chunk in self.graph.stream(init_agent_state, **args):
                 if len(chunk["messages"]) == 0:
                     pass
                 else:
-                    chunk["messages"][-1].pretty_print()
+                    # Only print if we haven't seen this exact message before
+                    last_message = chunk["messages"][-1]
+                    message_key = f"{last_message.content}_{last_message.sender if hasattr(last_message, 'sender') else 'unknown'}"
+                    if message_key not in seen_messages:
+                        last_message.pretty_print()
+                        seen_messages.add(message_key)
                     trace.append(chunk)
 
             final_state = trace[-1]

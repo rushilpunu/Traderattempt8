@@ -248,6 +248,14 @@ def _get_stock_stats_bulk(
         
         df = wrap(data)
         df["Date"] = df["Date"].dt.strftime("%Y-%m-%d")
+
+        # Ensure we have today's row even if market hasn't closed yet by padding with last known
+        last_known = df.iloc[-1].copy()
+        today_str = pd.Timestamp.today().strftime("%Y-%m-%d")
+        if last_known["Date"] < today_str:
+            last_known["Date"] = today_str
+            # keep previous close as proxy for intraday until cache refreshes
+            df = pd.concat([df, pd.DataFrame([last_known])], ignore_index=True)
     
     # Calculate the indicator for all rows at once
     df[indicator]  # This triggers stockstats to calculate the indicator

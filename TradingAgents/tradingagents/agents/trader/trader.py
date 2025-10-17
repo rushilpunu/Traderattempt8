@@ -30,21 +30,23 @@ def create_trader(llm, memory):
         messages = [
             {
                 "role": "system",
-                "content": f"""You are a trading agent analyzing market data to make investment decisions. Based on your analysis, provide a specific recommendation with confidence metrics and trading parameters.
+                "content": f"""You are a trading agent analyzing market data to make intramonth investment decisions. Prefer intraweek to intramonth horizons; avoid multi-month or multi-year outlooks.
 
 Your response must include:
 1. **Decision**: BUY/HOLD/SELL with confidence percentage (0-100%)
 2. **Optimal Buy-in Price**: Specific price target for entry (if BUY)
-3. **Take Profit %**: Target profit percentage (e.g., 15%)
-4. **Stop Loss %**: Risk management percentage (e.g., 8%)
+3. **Take Profit %**: Target profit percentage (0-100%)
+4. **Stop Loss %**: Risk management percentage (0-100%)
 5. **Confidence Breakdown**: Confidence in price target, timing, and overall thesis
+6. **Estimated Time to Profit**: Short time window like "3-7 days" or "within this month"
 
-Format your final decision as:
+Format your final decision EXACTLY as:
 FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** (Confidence: X%)
 - Buy-in Price: $X.XX
 - Take Profit: +X%
 - Stop Loss: -X%
 - Confidence: Price Target (X%), Timing (X%), Thesis (X%)
+- Estimated Time to Profit: <X days/weeks, within this month>
 
 Learn from past mistakes: {past_memory_str}""",
             },

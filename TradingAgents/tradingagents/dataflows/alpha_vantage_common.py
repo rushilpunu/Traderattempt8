@@ -45,42 +45,65 @@ def _make_api_request(function_name: str, params: dict) -> dict | str:
     Raises:
         AlphaVantageRateLimitError: When API rate limit is exceeded
     """
-    # Create a copy of params to avoid modifying the original
-    api_params = params.copy()
-    api_params.update({
-        "function": function_name,
-        "apikey": get_api_key(),
-        "source": "trading_agents",
-    })
+    import time
     
-    # Handle entitlement parameter if present in params or global variable
-    current_entitlement = globals().get('_current_entitlement')
-    entitlement = api_params.get("entitlement") or current_entitlement
+    max_retries = 2
+    base_delay = 20  # shorter base to avoid long stalls
+    min_delay = 5
     
-    if entitlement:
-        api_params["entitlement"] = entitlement
-    elif "entitlement" in api_params:
-        # Remove entitlement if it's None or empty
-        api_params.pop("entitlement", None)
-    
-    response = requests.get(API_BASE_URL, params=api_params)
-    response.raise_for_status()
+    for attempt in range(max_retries):
+        try:
+            # Create a copy of params to avoid modifying the original
+            api_params = params.copy()
+            api_params.update({
+                "function": function_name,
+                "apikey": get_api_key(),
+                "source": "trading_agents",
+            })
+            
+            # Handle entitlement parameter if present in params or global variable
+            current_entitlement = globals().get('_current_entitlement')
+            entitlement = api_params.get("entitlement") or current_entitlement
+            
+            if entitlement:
+                api_params["entitlement"] = entitlement
+            elif "entitlement" in api_params:
+                # Remove entitlement if it's None or empty
+                api_params.pop("entitlement", None)
+            
+            response = requests.get(API_BASE_URL, params=api_params, timeout=20)
+            response.raise_for_status()
 
-    response_text = response.text
-    
-    # Check if response is JSON (error responses are typically JSON)
-    try:
-        response_json = json.loads(response_text)
-        # Check for rate limit error
-        if "Information" in response_json:
-            info_message = response_json["Information"]
-            if "rate limit" in info_message.lower() or "api key" in info_message.lower():
-                raise AlphaVantageRateLimitError(f"Alpha Vantage rate limit exceeded: {info_message}")
-    except json.JSONDecodeError:
-        # Response is not JSON (likely CSV data), which is normal
-        pass
+            response_text = response.text
+            
+            # Check if response is JSON (error responses are typically JSON)
+            try:
+                response_json = json.loads(response_text)
+                # Check for rate limit error
+                if "Information" in response_json:
+                    info_message = response_json["Information"]
+                    if "rate limit" in info_message.lower() or "api key" in info_message.lower():
+                        if attempt < max_retries - 1:
+                            delay = max(min_delay, base_delay * (2 ** attempt))  # Exponential backoff with floor
+                            print(f"Rate limit hit. Waiting {delay} seconds before retry {attempt + 1}/{max_retries}")
+                            time.sleep(delay)
+                            continue
+                        else:
+                            raise AlphaVantageRateLimitError(f"Alpha Vantage rate limit exceeded after {max_retries} attempts: {info_message}")
+            except json.JSONDecodeError:
+                # Response is not JSON (likely CSV data), which is normal
+                pass
 
-    return response_text
+            return response_text
+            
+        except requests.RequestException as e:
+            if attempt < max_retries - 1:
+                delay = max(min_delay, base_delay * (2 ** attempt))
+                print(f"Request failed: {e}. Waiting {delay} seconds before retry {attempt + 1}/{max_retries}")
+                time.sleep(delay)
+                continue
+            else:
+                raise
 
 
 

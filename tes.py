@@ -25,5 +25,17 @@ config["data_vendors"] = {
 ta = TradingAgentsGraph(debug=True, config=config)
 
 # forward propagate
-_, decision = ta.propagate("AAPL", "2025-10-16")
-print(decision)
+print("What ticker do you want to trade?")
+ticker = input()
+print(f"You want to trade {ticker}")
+print("What date do you want to trade?")
+date = input()
+print(f"You want to trade {ticker} on {date}")
+print("Running the trading agent...")
+# forward propagate
+_, decision = ta.propagate(ticker, date)
+print("The trading agent has finished running")
+print(f"The decision is {decision}")
+
+# Memorize mistakes and reflect
+# ta.reflect_and_remember(1000) # parameter is the position returns

@@ -232,6 +232,9 @@ def route_to_vendor(method: str, *args, **kwargs):
     # Final result summary
     if not results:
         print(f"FAILURE: All {vendor_attempt_count} vendor attempts failed for method '{method}'")
+        # For non-critical enrichment like global news, return empty string to avoid stalling
+        if method in {"get_global_news", "get_news"}:
+            return ""
         raise RuntimeError(f"All vendor implementations failed for method '{method}'")
     else:
         print(f"FINAL: Method '{method}' completed with {len(results)} result(s) from {vendor_attempt_count} vendor attempt(s)")

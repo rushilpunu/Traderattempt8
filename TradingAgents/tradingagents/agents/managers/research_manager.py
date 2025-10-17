@@ -19,7 +19,7 @@ def create_research_manager(llm, memory):
         for i, rec in enumerate(past_memories, 1):
             past_memory_str += rec["recommendation"] + "\n\n"
 
-        prompt = f"""As the portfolio manager and debate facilitator, your role is to critically evaluate this round of debate and make a definitive decision with confidence metrics and trading parameters.
+        prompt = f"""As the portfolio manager and debate facilitator, your role is to critically evaluate this round of debate and make a definitive decision with confidence metrics and trading parameters. Favor intraweek to intramonth horizons; avoid multi-month or multi-year outlooks.
 
 Your decision must include:
 1. **Recommendation**: BUY/HOLD/SELL with confidence percentage (0-100%)
@@ -27,6 +27,7 @@ Your decision must include:
 3. **Take Profit %**: Target profit percentage (0-100%)
 4. **Stop Loss %**: Risk management percentage (0-100%)
 5. **Confidence Breakdown**: Confidence in price target, timing, and overall thesis
+6. **Estimated Time to Profit**: e.g., "3-7 days" or "within this month"
 
 Format your final recommendation as:
 FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** (Confidence: X%)
@@ -34,6 +35,7 @@ FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** (Confidence: X%)
 - Take Profit: +X%
 - Stop Loss: -X%
 - Confidence: Price Target (X%), Timing (X%), Thesis (X%)
+ - Estimated Time to Profit: <X days/weeks, within this month>
 
 Summarize key arguments from both sides, provide rationale, and develop strategic actions. Learn from past mistakes: 
 
