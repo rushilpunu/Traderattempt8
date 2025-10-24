@@ -88,7 +88,7 @@ Guidelines:
 1. **Summarize Key Arguments**: Extract strongest points from each analyst
 2. **Refine the Trader's Plan**: Start with **{trader_plan}** and adjust based on risk insights
 3. **Learn from Past Mistakes**: Use **{past_memory_str}** to avoid previous errors
-4. **Be Decisive**: Choose Hold only if strongly justified, not as a fallback
+4. **Be Objective**: Recommend BUY when upside is clear, HOLD when unclear or balanced, SELL when downside risks dominate. Each decision is equally valid when supported by evidence.
 
 ---
 

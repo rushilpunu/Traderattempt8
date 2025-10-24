@@ -81,7 +81,9 @@ FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** (Confidence: X%)
 - Confidence: Price Target (X%), Timing (X%), Thesis (X%)
  - Estimated Time to Profit: <X days/weeks, within this month>
 
-Summarize key arguments from both sides, provide rationale, and develop strategic actions. Learn from past mistakes: 
+**Important**: Recommend BUY when fundamentals and technicals support clear upside, HOLD when risks and rewards are balanced or unclear, and SELL when downside risks or negative trends dominate. All three decisions are equally valid - do not default to BUY.
+
+Summarize key arguments from both sides, provide rationale, and develop strategic actions. Learn from past mistakes:
 
 Here are your past reflections on mistakes:
 \"{past_memory_str}\"
