@@ -69,18 +69,21 @@ class StockstatsUtils:
                 data.to_csv(data_file, index=False)
 
             df = wrap(data)
-            df["Date"] = df["Date"].dt.strftime("%Y-%m-%d")
+            df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d")
             curr_date = curr_date.strftime("%Y-%m-%d")
 
         df[indicator]  # trigger stockstats to calculate the indicator
-        matching_rows = df[df["Date"].str.startswith(curr_date)]
+        date_strings = df["Date"].fillna("").astype(str)
+        date_index = pd.to_datetime(date_strings, errors="coerce")
+        matching_rows = df[date_strings == curr_date]
 
         if not matching_rows.empty:
             indicator_value = matching_rows[indicator].values[0]
             return indicator_value
         else:
             # Fallback to the most recent prior trading day
-            prior_rows = df[df["Date"] <= curr_date]
+            valid_mask = date_index.notna() & (date_index <= pd.to_datetime(curr_date))
+            prior_rows = df[valid_mask]
             if not prior_rows.empty:
                 indicator_value = prior_rows.iloc[-1][indicator]
                 return indicator_value

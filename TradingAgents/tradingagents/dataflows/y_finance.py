@@ -247,17 +247,19 @@ def _get_stock_stats_bulk(
             data.to_csv(data_file, index=False)
         
         df = wrap(data)
-        df["Date"] = df["Date"].dt.strftime("%Y-%m-%d")
 
         # Ensure we have today's row even if market hasn't closed yet by padding with last known
         last_known = df.iloc[-1].copy()
         today_str = pd.Timestamp.today().strftime("%Y-%m-%d")
-        if last_known["Date"] < today_str:
+        if pd.to_datetime(last_known["Date"]).strftime("%Y-%m-%d") < today_str:
             last_known["Date"] = today_str
             # keep previous close as proxy for intraday until cache refreshes
-            df = pd.concat([df, pd.DataFrame([last_known])], ignore_index=True)
-    
-    # Calculate the indicator for all rows at once
+            df = wrap(pd.concat([df, pd.DataFrame([last_known])], ignore_index=True))
+
+    # Normalize date column for downstream use
+    df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d")
+
+    # Calculate the indicator for all rows at once (wrap ensures StockDataFrame behavior)
     df[indicator]  # This triggers stockstats to calculate the indicator
     
     # Create a dictionary mapping date strings to indicator values
