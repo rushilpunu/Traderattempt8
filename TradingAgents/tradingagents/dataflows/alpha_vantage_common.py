@@ -4,6 +4,8 @@ import pandas as pd
 import json
 from datetime import datetime
 from io import StringIO
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 API_BASE_URL = "https://www.alphavantage.co/query"
 
@@ -39,6 +41,22 @@ class AlphaVantageRateLimitError(Exception):
     """Exception raised when Alpha Vantage API rate limit is exceeded."""
     pass
 
+_retry_strategy = Retry(
+    total=3,
+    connect=3,
+    read=3,
+    status=3,
+    backoff_factor=2,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET"],
+    raise_on_status=False,
+)
+
+_session = requests.Session()
+_adapter = HTTPAdapter(max_retries=_retry_strategy)
+_session.mount("https://", _adapter)
+_session.mount("http://", _adapter)
+
 def _make_api_request(function_name: str, params: dict) -> dict | str:
     """Helper function to make API requests and handle responses.
     
@@ -47,8 +65,8 @@ def _make_api_request(function_name: str, params: dict) -> dict | str:
     """
     import time
     
-    max_retries = 2
-    base_delay = 20  # shorter base to avoid long stalls
+    max_retries = 3
+    base_delay = 10  # seconds
     min_delay = 5
     
     for attempt in range(max_retries):
@@ -71,7 +89,7 @@ def _make_api_request(function_name: str, params: dict) -> dict | str:
                 # Remove entitlement if it's None or empty
                 api_params.pop("entitlement", None)
             
-            response = requests.get(API_BASE_URL, params=api_params, timeout=20)
+            response = _session.get(API_BASE_URL, params=api_params, timeout=(10, 60))
             response.raise_for_status()
 
             response_text = response.text
