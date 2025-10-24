@@ -144,6 +144,8 @@ def route_to_vendor(method: str, *args, **kwargs):
     """Route method calls to appropriate vendor implementation with fallback support."""
     category = get_category_for_method(method)
     vendor_config = get_vendor(category, method)
+    config = get_config()
+    strict_routing = bool(config.get("strict_vendor_routing", False))
 
     # Handle comma-separated vendors
     primary_vendors = [v.strip() for v in vendor_config.split(',')]
@@ -156,9 +158,10 @@ def route_to_vendor(method: str, *args, **kwargs):
     
     # Create fallback vendor list: primary vendors first, then remaining vendors as fallbacks
     fallback_vendors = primary_vendors.copy()
-    for vendor in all_available_vendors:
-        if vendor not in fallback_vendors:
-            fallback_vendors.append(vendor)
+    if not (strict_routing and len(primary_vendors) == 1):
+        for vendor in all_available_vendors:
+            if vendor not in fallback_vendors:
+                fallback_vendors.append(vendor)
 
     # Debug: Print fallback ordering
     primary_str = " → ".join(primary_vendors)
@@ -230,6 +233,9 @@ def route_to_vendor(method: str, *args, **kwargs):
                 break
         else:
             print(f"FAILED: Vendor '{vendor}' produced no results")
+
+        if strict_routing and len(primary_vendors) == 1:
+            break
 
     # Final result summary
     if not results:
