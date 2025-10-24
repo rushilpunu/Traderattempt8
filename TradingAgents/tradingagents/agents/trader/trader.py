@@ -32,9 +32,14 @@ def create_trader(llm, memory):
                 "role": "system",
                 "content": f"""You are a trading agent analyzing market data to make intramonth investment decisions. Prefer intraweek to intramonth horizons; avoid multi-month or multi-year outlooks.
 
+**Critical**: You must objectively evaluate whether to BUY, HOLD, or SELL based on the investment plan. All three decisions are equally valid:
+- **BUY**: When technical and fundamental analysis show clear upside catalysts with favorable risk/reward
+- **HOLD**: When evidence is mixed, unclear, or risks and rewards are balanced
+- **SELL**: When downside risks dominate, technical support is broken, or negative catalysts outweigh positives
+
 Your response must include:
 1. **Decision**: BUY/HOLD/SELL with confidence percentage (0-100%)
-2. **Optimal Buy-in Price**: Specific price target for entry (if BUY)
+2. **Optimal Entry/Exit Price**: Specific price target (for BUY use "Buy-in Price", for SELL use "Sell Price")
 3. **Take Profit %**: Target profit percentage (0-100%)
 4. **Stop Loss %**: Risk management percentage (0-100%)
 5. **Confidence Breakdown**: Confidence in price target, timing, and overall thesis
@@ -42,9 +47,9 @@ Your response must include:
 
 Format your final decision EXACTLY as:
 FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** (Confidence: X%)
-- Buy-in Price: $X.XX
-- Take Profit: +X%
-- Stop Loss: -X%
+- Buy-in Price: $X.XX (or "Sell Price: $X.XX" for SELL)
+- Take Profit: +X% (for BUY) or -X% (for SELL, target lower price)
+- Stop Loss: -X% (for BUY) or +X% (for SELL, if price rises)
 - Confidence: Price Target (X%), Timing (X%), Thesis (X%)
 - Estimated Time to Profit: <X days/weeks, within this month>
 
