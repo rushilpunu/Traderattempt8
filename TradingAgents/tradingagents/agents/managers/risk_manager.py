@@ -11,9 +11,46 @@ def create_risk_manager(llm, memory):
         risk_debate_state = state["risk_debate_state"]
         market_research_report = state["market_report"]
         news_report = state["news_report"]
-        fundamentals_report = state["news_report"]
+        fundamentals_report = state["fundamentals_report"]
         sentiment_report = state["sentiment_report"]
         trader_plan = state["investment_plan"]
+
+        # Extract analyst recommendations
+        analyst_decisions = []
+        for report, name in [(market_research_report, "Market"), (fundamentals_report, "Fundamentals"),
+                             (news_report, "News"), (sentiment_report, "Sentiment")]:
+            if "FINAL TRANSACTION PROPOSAL:" in report:
+                if "**BUY**" in report:
+                    analyst_decisions.append(f"{name}: BUY")
+                elif "**SELL**" in report:
+                    analyst_decisions.append(f"{name}: SELL")
+                elif "**HOLD**" in report:
+                    analyst_decisions.append(f"{name}: HOLD")
+
+        analyst_summary = "\n".join(analyst_decisions) if analyst_decisions else "No explicit analyst decisions found"
+
+        # Calculate analyst agreement for confidence calibration
+        buy_count = sum(1 for d in analyst_decisions if "BUY" in d)
+        sell_count = sum(1 for d in analyst_decisions if "SELL" in d)
+        hold_count = sum(1 for d in analyst_decisions if "HOLD" in d)
+        total_analysts = len(analyst_decisions)
+
+        if total_analysts > 0:
+            max_agreement = max(buy_count, sell_count, hold_count)
+            agreement_pct = (max_agreement / total_analysts) * 100
+            majority_decision = "BUY" if buy_count == max_agreement else ("SELL" if sell_count == max_agreement else "HOLD")
+
+            confidence_guidance = f"""
+**Confidence Calibration Guidance:**
+- Analyst Agreement: {agreement_pct:.0f}% ({max_agreement}/{total_analysts} analysts agree)
+- Majority Decision: {majority_decision}
+- High agreement (75%+): Use confidence 70-85%
+- Moderate agreement (50-75%): Use confidence 55-70%
+- Low agreement (<50%): Use confidence 40-55% (indicates uncertainty)
+- If overriding majority: Reduce confidence by 10-15% and provide explicit justification
+"""
+        else:
+            confidence_guidance = "No analyst decisions available for calibration."
 
         curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
         past_memories = memory.get_memories(curr_situation, n_matches=2)
@@ -23,6 +60,13 @@ def create_risk_manager(llm, memory):
             past_memory_str += rec["recommendation"] + "\n\n"
 
         prompt = f"""As the Risk Management Judge and Debate Facilitator, your goal is to evaluate the debate between three risk analysts and make the final trading decision with comprehensive confidence metrics and risk parameters.
+
+**CRITICAL - Analyst Recommendations:**
+{analyst_summary}
+
+{confidence_guidance}
+
+**Decision Validation Rule**: If multiple analysts recommend HOLD or SELL, you MUST provide strong, explicit justification if you decide to BUY instead. Respect analyst expertise - they analyzed the raw data. If they say HOLD/SELL, only override to BUY if the debate reveals compelling new insights that analysts missed.
 
 Your FINAL DECISION must include:
 1. **Final Recommendation**: BUY/HOLD/SELL with overall confidence percentage (0-100%)

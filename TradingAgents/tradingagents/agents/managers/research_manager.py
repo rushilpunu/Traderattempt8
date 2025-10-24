@@ -12,6 +12,43 @@ def create_research_manager(llm, memory):
 
         investment_debate_state = state["investment_debate_state"]
 
+        # Extract analyst recommendations
+        analyst_decisions = []
+        for report, name in [(market_research_report, "Market"), (fundamentals_report, "Fundamentals"),
+                             (news_report, "News"), (sentiment_report, "Sentiment")]:
+            if "FINAL TRANSACTION PROPOSAL:" in report:
+                if "**BUY**" in report:
+                    analyst_decisions.append(f"{name}: BUY")
+                elif "**SELL**" in report:
+                    analyst_decisions.append(f"{name}: SELL")
+                elif "**HOLD**" in report:
+                    analyst_decisions.append(f"{name}: HOLD")
+
+        analyst_summary = "\n".join(analyst_decisions) if analyst_decisions else "No explicit analyst decisions found"
+
+        # Calculate analyst agreement for confidence calibration
+        buy_count = sum(1 for d in analyst_decisions if "BUY" in d)
+        sell_count = sum(1 for d in analyst_decisions if "SELL" in d)
+        hold_count = sum(1 for d in analyst_decisions if "HOLD" in d)
+        total_analysts = len(analyst_decisions)
+
+        if total_analysts > 0:
+            max_agreement = max(buy_count, sell_count, hold_count)
+            agreement_pct = (max_agreement / total_analysts) * 100
+            majority_decision = "BUY" if buy_count == max_agreement else ("SELL" if sell_count == max_agreement else "HOLD")
+
+            confidence_guidance = f"""
+**Confidence Calibration Guidance:**
+- Analyst Agreement: {agreement_pct:.0f}% ({max_agreement}/{total_analysts} analysts agree)
+- Majority Decision: {majority_decision}
+- High agreement (75%+): Use confidence 70-85%
+- Moderate agreement (50-75%): Use confidence 55-70%
+- Low agreement (<50%): Use confidence 40-55% (indicates uncertainty)
+- If overriding majority: Reduce confidence by 10-15% and provide explicit justification
+"""
+        else:
+            confidence_guidance = "No analyst decisions available for calibration."
+
         curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
         past_memories = memory.get_memories(curr_situation, n_matches=2)
 
@@ -20,6 +57,13 @@ def create_research_manager(llm, memory):
             past_memory_str += rec["recommendation"] + "\n\n"
 
         prompt = f"""As the portfolio manager and debate facilitator, your role is to critically evaluate this round of debate and make a definitive decision with confidence metrics and trading parameters. Favor intraweek to intramonth horizons; avoid multi-month or multi-year outlooks.
+
+**CRITICAL - Analyst Recommendations:**
+{analyst_summary}
+
+{confidence_guidance}
+
+**Decision Validation Rule**: Respect the analyst recommendations above. If multiple analysts say HOLD or SELL, you should strongly consider their assessment unless the debate reveals compelling counter-evidence they missed.
 
 Your decision must include:
 1. **Recommendation**: BUY/HOLD/SELL with confidence percentage (0-100%)
