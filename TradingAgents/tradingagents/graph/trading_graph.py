@@ -230,14 +230,21 @@ class TradingAgentsGraph:
             "final_trade_decision": final_state["final_trade_decision"],
         }
 
-        # Save to file
-        directory = Path(f"eval_results/{self.ticker}/TradingAgentsStrategy_logs/")
+        # Save to file at a stable project-level location
+        eval_results_dir = self.config.get("eval_results_dir")
+        if eval_results_dir:
+            base_path = Path(eval_results_dir).expanduser()
+        else:
+            base_path = Path(__file__).resolve().parents[3] / "eval_results"
+
+        directory = base_path / self.ticker / "TradingAgentsStrategy_logs"
         directory.mkdir(parents=True, exist_ok=True)
 
-        with open(
-            f"eval_results/{self.ticker}/TradingAgentsStrategy_logs/full_states_log_{trade_date}.json",
-            "w",
-        ) as f:
+        # Sanitize date to prevent path issues (replace / and \ with -)
+        safe_date = trade_date.replace("/", "-").replace("\\", "-")
+        log_path = directory / f"full_states_log_{safe_date}.json"
+
+        with open(log_path, "w") as f:
             json.dump(self.log_states_dict, f, indent=4)
 
     def reflect_and_remember(self, returns_losses):
